@@ -171,6 +171,12 @@ if __name__ == "__main__":
     variations_result_sheet = 'Model Results Variations'
     
     inputs_dict = read_inputs(model_file_path, model_inputs_sheet, weather_data_sheet, run_schedule_sheet, thermal_profile_sensible_sheet, thermal_profile_latent_sheet, setpoint_profile_sheet)
-
+  
+    for key in inputs_dict['model_inputs']:
+        if 'HVAC Module' in str(key):
+            if str(inputs_dict['model_inputs'][key])=='nan':
+                inputs_dict['model_inputs'][key] = 0
+                
     with open('inputs.json', 'w') as outfile:
         json.dump(inputs_dict, outfile)
+   
