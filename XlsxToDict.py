@@ -177,6 +177,19 @@ if __name__ == "__main__":
             if str(inputs_dict['model_inputs'][key])=='nan':
                 inputs_dict['model_inputs'][key] = 0
                 
-    with open('inputs.json', 'w') as outfile:
-        json.dump(inputs_dict, outfile)
+    inputs_dict['model_inputs']['Set Point Profile 1'] = inputs_dict['model_inputs'][1]
+    inputs_dict['model_inputs']['Set Point Profile 2'] = inputs_dict['model_inputs'][2]
+    inputs_dict['model_inputs']['Set Point Profile 3'] = inputs_dict['model_inputs'][3]
+    del inputs_dict['model_inputs'][1]
+    del inputs_dict['model_inputs'][2]
+    del inputs_dict['model_inputs'][3]
+    inputs_dict['model_inputs']['General'] = {}
+    keys = []
+    for key in inputs_dict['model_inputs'].keys():
+        if not 'Set Point Profile' in key and not 'General' in key:
+            inputs_dict['model_inputs']['General'][key] = inputs_dict['model_inputs'][key]
+            keys.append(key)
+    for key in keys:
+        del inputs_dict['model_inputs'][key]
+            
    
