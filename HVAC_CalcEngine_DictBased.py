@@ -18,10 +18,10 @@ class HVAC_Internal_Calculation(object):
         for i, t in enumerate(self.ambient_temperature):
             self.ambient_w.append(PsyCalc.w_of_tdb_rh(t,self.ambient_rh[i], self.ambient_pressure))
         
-        self.chilled_water_temperature         = self.inputs_dict['model_inputs']['Average Cooling Coil Temperature - Tdb']
-        self.room_area                         = self.inputs_dict['model_inputs']['Room Area']
-        self.room_height                       = self.inputs_dict['model_inputs']['Room Height']
-        self.room_height                       = self.inputs_dict['model_inputs']['Room Height']
+        self.chilled_water_temperature         = self.inputs_dict['model_inputs']['General']['Average Cooling Coil Temperature - Tdb']
+        self.room_area                         = self.inputs_dict['model_inputs']['General']['Room Area']
+        self.room_height                       = self.inputs_dict['model_inputs']['General']['Room Height']
+        self.room_height                       = self.inputs_dict['model_inputs']['General']['Room Height']
         
         self.setpoint_profile                  = self.inputs_dict['setpoint_profile']['Setpoint_Profile']
         self.run_schedule_profile              = self.inputs_dict['run_schedule']['Run_Schedule_Profile']
@@ -31,14 +31,14 @@ class HVAC_Internal_Calculation(object):
         #initialize tdb and rh setpoints according to hour 0, setpoints are updated every hour in the calculation
         self.set_setpoints(0)
                
-        self.supply_fan_pressure               = self.inputs_dict['model_inputs']["Supply Fan Total Static Pressure"]
-        self.return_fan_pressure               = self.inputs_dict['model_inputs']["Return Fan Total Static Pressure"]
-        self.supply_fan_efficiency             = self.inputs_dict['model_inputs']["Supply Fan Efficiency"]
-        self.return_fan_efficiency             = self.inputs_dict['model_inputs']["Return Fan Efficiency"]
-        self.min_fresh_air_percentage          = self.inputs_dict['model_inputs']["Minimum Fresh Air Percentage"]
-        self.active_mixing                     = self.inputs_dict['model_inputs']["Active Mixing"]
-        self.heat_recovery_efficiency          = self.inputs_dict['model_inputs']["Heat Recovery Efficiency (S)"]
-        self.HVAC_systemtype, self.check_dehum = self.get_HVAC_systemtype(inputs_dict['model_inputs'])
+        self.supply_fan_pressure               = self.inputs_dict['model_inputs']['General']["Supply Fan Total Static Pressure"]
+        self.return_fan_pressure               = self.inputs_dict['model_inputs']['General']["Return Fan Total Static Pressure"]
+        self.supply_fan_efficiency             = self.inputs_dict['model_inputs']['General']["Supply Fan Efficiency"]
+        self.return_fan_efficiency             = self.inputs_dict['model_inputs']['General']["Return Fan Efficiency"]
+        self.min_fresh_air_percentage          = self.inputs_dict['model_inputs']['General']["Minimum Fresh Air Percentage"]
+        self.active_mixing                     = self.inputs_dict['model_inputs']['General']["Active Mixing"]
+        self.heat_recovery_efficiency          = self.inputs_dict['model_inputs']['General']["Heat Recovery Efficiency (S)"]
+        self.HVAC_systemtype, self.check_dehum = self.get_HVAC_systemtype(inputs_dict['model_inputs']['General'])
         
         #inital state = room setpoint
         self.current_HVAC_tdb                  = self.room_temperature_setpoint
@@ -212,46 +212,64 @@ class HVAC_Internal_Calculation(object):
                         numpy.sum(self.results_return_fan_power))
     
         
-        summary_values = {
+        summary_values = {'min': {
                 'fans_min' : numpy.min(numpy.min(self.results_supply_fan_power)+numpy.min(self.results_return_fan_power)),
                 'preheat_min' : numpy.min(self.results_preheat_load), 
                 'dehum_min' : numpy.min(self.results_dehum_load),
                 'hum_min' : numpy.min(self.results_hum_load),
                 'heating_min' : numpy.min(self.results_heat_load),
-                'cooling_min' : numpy.min(self.results_cool_load),
+                'cooling_min' : numpy.min(self.results_cool_load)
+                },
+            
+                          'max': {
                 'fans_max' : numpy.max(numpy.max(self.results_supply_fan_power)+numpy.max(self.results_return_fan_power)),
                 'preheat_max' : numpy.max(self.results_preheat_load),
                 'dehum_max' : numpy.max(self.results_dehum_load), 
                 'hum_max' : numpy.max(self.results_hum_load),
                 'heating_max' : numpy.max(self.results_heat_load), 
-                'cooling_max' : numpy.max(self.results_cool_load), 
+                'cooling_max' : numpy.max(self.results_cool_load)
+                },
+                          'avg': {
                 'fans_avg' : numpy.mean(numpy.mean(self.results_supply_fan_power)+numpy.mean(self.results_return_fan_power)),
                 'preheat_avg' : numpy.mean(self.results_preheat_load),      
                 'dehum_avg' : numpy.mean(self.results_dehum_load),
                 'hum_avg' : numpy.mean(self.results_hum_load),
                 'heating_avg' : numpy.mean(self.results_heat_load), 
-                'cooling_avg' : numpy.mean(self.results_cool_load), 
+                'cooling_avg' : numpy.mean(self.results_cool_load)
+                },
+                          'total': {
                 'fans_total' : numpy.sum(self.results_supply_fan_power)+numpy.sum(self.results_return_fan_power),
                 'preheat_total' : numpy.sum(self.results_preheat_load), 
                 'dehum_total' : numpy.sum(self.results_dehum_load),
                 'hum_total' : numpy.sum(self.results_hum_load),
                 'heating_total' : numpy.sum(self.results_heat_load), 
-                'cooling_total' : numpy.sum(self.results_cool_load),
-                
+                'cooling_total' : numpy.sum(self.results_cool_load)
+                },
+                          'kpi': {
                 'hvac_total_energy_area' : total_energy/self.room_area,
                 'hvac_heating' : numpy.sum(self.results_heat_load)/(self.room_area), 
                 'hvac_cooling' : numpy.sum(self.results_cool_load)/(self.room_area), 
                 'hvac_humidification' : numpy.sum(self.results_hum_load)/(self.room_area), 
                 'hvac_dehumidification' : numpy.sum(self.results_dehum_load)/(self.room_area), 
-                'hvac_fans' : (numpy.sum(self.results_supply_fan_power)+numpy.sum(self.results_return_fan_power))/(self.room_area),
-                
-                'tdb_hours_within': self.results_tdb_within,
-                'tdb_hours_outside': self.results_tdb_outside,
-                'rh_hours_within': self.results_rh_within,
-                'rh_hours_outside': self.results_rh_outside,
-                'tdb_rh_hours_within': self.results_tdb_rh_within,
-                'tdb_rh_hours_outside': self.results_tdb_rh_outside 
+                'hvac_fans' : (numpy.sum(self.results_supply_fan_power)+numpy.sum(self.results_return_fan_power))/(self.room_area)
+                },
+                          'within': {
+                'tdb_hours': float(self.results_tdb_within),
+                'rh_hours': float(self.results_rh_within),
+                'tdb_rh_hours': float(self.results_tdb_rh_within)
+                },
+                          'outside': {
+                'tdb_hours': float(self.results_tdb_outside),
+                'rh_hours': float(self.results_rh_outside),
+                'tdb_rh_hours': float(self.results_tdb_rh_outside) 
                     }
+                }
+        
+        for key in summary_values:
+            for key_further in summary_values[key]:
+                summary_values[key][key_further] = float(summary_values[key][key_further])
+                
+        
         return summary_values
         
     def set_required_room_supply_tdb_and_w(self, hour):
@@ -297,8 +315,8 @@ class HVAC_Internal_Calculation(object):
         profile_hour            = hour - day*24 + 1
         run_profile_percentage  = self.run_schedule_profile[hour]
         
-        self.supply_airflow     = self.inputs_dict['model_inputs']['Supply Airflow']*run_profile_percentage
-        self.return_airflow     = self.inputs_dict['model_inputs']['Return Airflow']*run_profile_percentage
+        self.supply_airflow     = self.inputs_dict['model_inputs']['General']['Supply Airflow']*run_profile_percentage
+        self.return_airflow     = self.inputs_dict['model_inputs']['General']['Return Airflow']*run_profile_percentage
         
         self.results_run_schedule.append(run_profile_percentage)
         self.results_supply_airflow.append(float(self.supply_airflow))
@@ -312,13 +330,13 @@ class HVAC_Internal_Calculation(object):
         profile_hour            = hour - day*24 + 1
         setpoint_profile_number = self.setpoint_profile[hour]
         
-        self.preheat_setpoint                = self.inputs_dict['model_inputs']['Preheat Temperature Setpoint - Tdb']
-        self.room_temperature_setpoint       = self.inputs_dict['model_inputs'][str(setpoint_profile_number)]['Room Temperature Setpoint']
-        self.room_temperature_lowerband      = self.inputs_dict['model_inputs'][str(setpoint_profile_number)]['Room Temperature Lower Band']
-        self.room_temperature_upperband      = self.inputs_dict['model_inputs'][str(setpoint_profile_number)]['Room Temperature Upper Band']
-        self.room_humidity_setpoint          = self.inputs_dict['model_inputs'][str(setpoint_profile_number)]['Room Humidity Setpoint']
-        self.room_humidity_lowerband         = self.inputs_dict['model_inputs'][str(setpoint_profile_number)]['Room Humidity Lower Band']
-        self.room_humidity_upperband         = self.inputs_dict['model_inputs'][str(setpoint_profile_number)]['Room Humidity Upper Band']
+        self.preheat_setpoint                = self.inputs_dict['model_inputs']['General']['Preheat Temperature Setpoint - Tdb']
+        self.room_temperature_setpoint       = self.inputs_dict['model_inputs']['Set Point Profile '+str(setpoint_profile_number)]['Room Temperature Setpoint']
+        self.room_temperature_lowerband      = self.inputs_dict['model_inputs']['Set Point Profile '+str(setpoint_profile_number)]['Room Temperature Lower Band']
+        self.room_temperature_upperband      = self.inputs_dict['model_inputs']['Set Point Profile '+str(setpoint_profile_number)]['Room Temperature Upper Band']
+        self.room_humidity_setpoint          = self.inputs_dict['model_inputs']['Set Point Profile '+str(setpoint_profile_number)]['Room Humidity Setpoint']
+        self.room_humidity_lowerband         = self.inputs_dict['model_inputs']['Set Point Profile '+str(setpoint_profile_number)]['Room Humidity Lower Band']
+        self.room_humidity_upperband         = self.inputs_dict['model_inputs']['Set Point Profile '+str(setpoint_profile_number)]['Room Humidity Upper Band']
         
         self.room_w_setpoint                 = PsyCalc.w_of_tdb_rh(self.room_temperature_setpoint, self.room_humidity_setpoint, self.ambient_pressure) 
         self.room_w_lowerband                = PsyCalc.w_of_tdb_rh(self.room_temperature_setpoint, self.room_humidity_lowerband, self.ambient_pressure)

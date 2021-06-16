@@ -2,7 +2,6 @@ import pandas as pd
 import math
 import json
 
-
 def read_model_inputs(model_file_path, model_inputs_sheet):
 
     #dictionary to hold model input values
@@ -15,36 +14,28 @@ def read_model_inputs(model_file_path, model_inputs_sheet):
     model_inputs_df = model_inputs_df[model_inputs_df['No.'].notna()]
 
     i = 0
-    while i < model_inputs_df.shape[0]:
+    
+    while i < 45:
         
-        type_param = model_inputs_df.loc[i, 'Type']
+        type_param =str(model_inputs_df.loc[i, 'Type'])
         model_input_param = model_inputs_df.loc[i, 'Parameter']
         value = model_inputs_df.loc[i, 'Value']
-                
-        if math.isnan(type_param):
+        if not 'Setpoint' in type_param:
             model_inputs[model_input_param] = value
             i=i+1
         
         #if type_param value is integer, read corresponding setpoint profiles   
         else:
-            value_dict = {}
+            value_dict            = {}
+            for k in range(i,i+6):
+                key   = model_inputs_df.loc[k, 'Parameter']
+                value = model_inputs_df.loc[k, 'Value']
+                value_dict[key] = value
+                i += 1
             
-            while i < model_inputs_df.shape[0]:            
-                
-                value_dict[model_input_param] = value             
-                i=i+1
-                
-                if i == model_inputs_df.shape[0]: break
-                
-                if (math.isnan(model_inputs_df.loc[i, 'Type'])) & (model_inputs_df.loc[i, 'Parameter'].lower().startswith('room')):
-                    model_input_param = model_inputs_df.loc[i, 'Parameter']
-                    value = model_inputs_df.loc[i, 'Value']
-                    
-                else:
-                    break
-                    
-            model_inputs[int(type_param)] = value_dict
-
+            modified_key = int(type_param.split(' ')[2])
+            model_inputs[modified_key] = value_dict
+            
     return model_inputs
 
 
@@ -156,22 +147,7 @@ def read_inputs(model_file_path, model_inputs_sheet, weather_data_sheet, run_sch
 
     return inputs_dict
 
-if __name__ == "__main__":
-    
-    model_file_path = r'C:\Users\Mike.Jaeger\Desktop\GitLabStuff\hvac-simulation-iia\TestCases\Test 21.xlsx'
-    
-    model_inputs_sheet = 'Model Inputs'
-    weather_data_sheet = 'Weather Data'
-    run_schedule_sheet = 'Run Schedule Profile'
-    thermal_profile_sensible_sheet = 'Thermal Profile (Sensible)'
-    thermal_profile_latent_sheet = 'Thermal Profile (Latent)'
-    setpoint_profile_sheet = 'Set Point Profile'
-    detailed_results_sheet = 'Model Results Detailed'
-    summary_results_sheet = 'Model Results Summary'
-    variations_result_sheet = 'Model Results Variations'
-    
-    inputs_dict = read_inputs(model_file_path, model_inputs_sheet, weather_data_sheet, run_schedule_sheet, thermal_profile_sensible_sheet, thermal_profile_latent_sheet, setpoint_profile_sheet)
-  
+def tweak_inputs_dict(inputs_dict):
     for key in inputs_dict['model_inputs']:
         if 'HVAC Module' in str(key):
             if str(inputs_dict['model_inputs'][key])=='nan':
@@ -191,5 +167,30 @@ if __name__ == "__main__":
             keys.append(key)
     for key in keys:
         del inputs_dict['model_inputs'][key]
+        
+    return inputs_dict
+
+if __name__ == "__main__":
+    
+    model_file_path = r'Template.xlsx'
+    
+    model_inputs_sheet = 'Model Inputs'
+    weather_data_sheet = 'Weather Data'
+    run_schedule_sheet = 'Run Schedule Profile'
+    thermal_profile_sensible_sheet = 'Thermal Profile (Sensible)'
+    thermal_profile_latent_sheet = 'Thermal Profile (Latent)'
+    setpoint_profile_sheet = 'Set Point Profile'
+    detailed_results_sheet = 'Model Results Detailed'
+    summary_results_sheet = 'Model Results Summary'
+    variations_result_sheet = 'Model Results Variations'
+    
+    inputs_dict = read_inputs(model_file_path, model_inputs_sheet, weather_data_sheet, run_schedule_sheet, thermal_profile_sensible_sheet, thermal_profile_latent_sheet, setpoint_profile_sheet)
+    inputs_dict = tweak_inputs_dict(inputs_dict)
+    
+        
+    
+        
+       
+        
             
    
