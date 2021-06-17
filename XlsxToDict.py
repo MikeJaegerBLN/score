@@ -168,6 +168,17 @@ def tweak_inputs_dict(inputs_dict):
     for key in keys:
         del inputs_dict['model_inputs'][key]
         
+    for key in inputs_dict:   
+        for key2 in inputs_dict[key]:
+            if str(inputs_dict[key][key2])=='nan' or str(inputs_dict[key][key2])=='NaN':
+                inputs_dict[key][key2] = 'nan'  
+            try:
+                for key3 in inputs_dict[key][key2]:
+                    if str(inputs_dict[key][key2][key3])=='nan' or str(inputs_dict[key][key2][key3])=='NaN':
+                        inputs_dict[key][key2][key3] = 'nan'
+            except:
+                pass
+        
     return inputs_dict
 
 if __name__ == "__main__":
