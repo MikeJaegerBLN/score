@@ -183,6 +183,9 @@ def tweak_inputs_dict(inputs_dict):
 
 if __name__ == "__main__":
     
+    with open('run_schedules.json', 'r') as f:
+        schedules = json.load(f)
+    
     model_file_path = r'Template.xlsx'
     
     model_inputs_sheet = 'Model Inputs'
@@ -197,9 +200,43 @@ if __name__ == "__main__":
     
     inputs_dict = read_inputs(model_file_path, model_inputs_sheet, weather_data_sheet, run_schedule_sheet, thermal_profile_sensible_sheet, thermal_profile_latent_sheet, setpoint_profile_sheet)
     inputs_dict = tweak_inputs_dict(inputs_dict)
+            
+    #inputs_dict['run_schedule']['Run_Schedule_Profile'] = schedules[key_to_read]
+    
+    #for key in inputs_dict['model_inputs']['General']:
+    #    print (key)
+    with open('inputs.json', 'w') as f:
+        json.dump(inputs_dict, f)
+    
     
         
+    #for key in schedules:
+    #    print (schedules[key])
     
+    #run_schedules = {}
+    #schedule['schedule'] = inputs_dict['run_schedule']['Run_Schedule_Profile']
+    
+    #with open('daytime_on_nighttime_off_sat_sun_off.json', 'r') as f:
+    #    run_schedules['Daytime on, Nighttime off, Sat&Sun off'] = json.load(f)
+        
+    #with open('daytime_on_nighttime_halfpower_sat_sun_off.json', 'r') as f:
+    #    run_schedules['Daytime on, Nighttime halfpower, Sat&Sun off'] = json.load(f)
+        
+    #with open('daytime_on_nighttime_halfpower_sat_sun_halfpower.json', 'r') as f:
+    #    run_schedules['Daytime on, Nighttime halfpower, Sat&Sun halfpower'] = json.load(f)
+        
+    #with open('always_on.json', 'r') as f:
+    #    run_schedules['Always on'] = json.load(f)
+        
+    #with open('always_on_sat_sun_off.json', 'r') as f:
+    #    run_schedules['Always on, Sat&Sun off'] = json.load(f)
+        
+    #with open('always_on_sat_sun_halfpower.json', 'r') as f:
+    #    run_schedules['Always on, Sat&Sun halfpower'] = json.load(f)
+        
+    #with open('run_schedules.json', 'w') as f:
+    #    json.dump(run_schedules, f)
+   
         
        
         
