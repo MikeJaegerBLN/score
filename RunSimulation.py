@@ -94,7 +94,7 @@ def temperature_setpoint_variations(setpoints, inputs_dict, variations, mitigati
            
     return variations
 
-def create_variations(summary_values):
+def create_variations(summary_values, variant):
     
     global mitigations
     mitigations = ['supply airflow', 'temperature control bands', 'humidity control bands', 'temperature setpoints']
@@ -131,10 +131,10 @@ def create_variations(summary_values):
     humidity_controlbands    = [0.05, 0.1, 0.15, 0.2]
     temperature_setpoints    = [-1, 1]
     
-    variations = supply_airflow_variations(airflows, inputs_dict, variations, mitigations[0], results)
-    variations = temperature_controlband_variations(temperature_controlbands, inputs_dict, variations, mitigations[1], results)
-    variations = humidity_controlband_variations(humidity_controlbands, inputs_dict, variations, mitigations[2], results)
-    variations = temperature_setpoint_variations(temperature_setpoints, inputs_dict, variations, mitigations[3], results)
+    variations = supply_airflow_variations(airflows, variant, variations, mitigations[0], results)
+    variations = temperature_controlband_variations(temperature_controlbands, variant, variations, mitigations[1], results)
+    variations = humidity_controlband_variations(humidity_controlbands, variant, variations, mitigations[2], results)
+    variations = temperature_setpoint_variations(temperature_setpoints, variant, variations, mitigations[3], results)
     
     return variations
 
@@ -245,18 +245,24 @@ if __name__ == "__main__":
     
     inputs_path = 'inputs.json'    
     with open(inputs_path, 'r') as infile:
-        inputs_dict = json.load(infile)
-
-    hvac_obj                 = HVAC.HVAC_Internal_Calculation(inputs_dict)
-    detailed_results         = hvac_obj.get_detailed_results()
-    summary_values           = hvac_obj.get_summary_values()
-    variation_summary_values = create_variations(summary_values)
-   
-    case = 'Template_wResults.xlsx'
-    model_file_path = r'C:\Users\Mike.Jaeger\Desktop\GitLabStuff\ahes-frontend\{}'.format(case)
+        inputs_dicts = json.load(infile)
     
-    write_summary_values(model_file_path, 'Model Results Summary', summary_values)        
-    write_detailed_result(model_file_path, 'Model Results Detailed', detailed_results)
+    #if only one variant
+    if not '0' in inputs_dicts.keys():
+        inputs_dicts['0'] = inputs_dicts
+   
+    #if multiple variants
+    for variant in inputs_dicts:
+        hvac_obj                 = HVAC.HVAC_Internal_Calculation(inputs_dicts[variant])
+        detailed_results         = hvac_obj.get_detailed_results()
+        summary_values           = hvac_obj.get_summary_values()
+        variation_summary_values = create_variations(summary_values, inputs_dicts[variant])
+   
+        case = 'Template_wResults.xlsx'
+        model_file_path = r'C:\Users\Mike.Jaeger\Desktop\GitLabStuff\ahes-frontend\{}'.format(case)
+    
+        write_summary_values(model_file_path, 'Model Results Summary', summary_values)        
+        write_detailed_result(model_file_path, 'Model Results Detailed', detailed_results)
     #write_variations_result(model_file_path, 'Model Results Variations', variation_summary_values, summary_values)
     
         

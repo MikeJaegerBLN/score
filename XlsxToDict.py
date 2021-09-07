@@ -187,8 +187,8 @@ def read_inputs(model_file_path, model_inputs_sheet, weather_data_sheet, run_sch
         }
         
         inputs_dicts[iAHU] = inputs_dict
-    pdb.set_trace()
-    return inputs_dict
+  
+    return inputs_dicts
 
 def tweak_inputs_dict(inputs_dict):
     for key in inputs_dict['model_inputs']:
@@ -241,45 +241,18 @@ if __name__ == "__main__":
     summary_results_sheet = 'Model Results Summary'
     variations_result_sheet = 'Model Results Variations'
     
-    inputs_dict = read_inputs(model_file_path, model_inputs_sheet, weather_data_sheet, run_schedule_sheet, thermal_profile_sensible_sheet, thermal_profile_latent_sheet, setpoint_profile_sheet)
-    inputs_dict = tweak_inputs_dict(inputs_dict)
-            
-    #inputs_dict['run_schedule']['Run_Schedule_Profile'] = schedules[key_to_read]
+    inputs_dicts = read_inputs(model_file_path, model_inputs_sheet, weather_data_sheet, run_schedule_sheet, thermal_profile_sensible_sheet, thermal_profile_latent_sheet, setpoint_profile_sheet)
+    for variant in inputs_dicts:
+        inputs_dicts[variant] = tweak_inputs_dict(inputs_dicts[variant])   
     
-    for key in inputs_dict['model_inputs']['General']:
+    for key in inputs_dicts:
         print (key)
+        
     with open('inputs.json', 'w') as f:
-        json.dump(inputs_dict, f)
+        json.dump(inputs_dicts, f)
     
     
-        
-    #for key in schedules:
-    #    print (schedules[key])
-    
-    #run_schedules = {}
-    #schedule['schedule'] = inputs_dict['run_schedule']['Run_Schedule_Profile']
-    
-    #with open('daytime_on_nighttime_off_sat_sun_off.json', 'r') as f:
-    #    run_schedules['Daytime on, Nighttime off, Sat&Sun off'] = json.load(f)
-        
-    #with open('daytime_on_nighttime_halfpower_sat_sun_off.json', 'r') as f:
-    #    run_schedules['Daytime on, Nighttime halfpower, Sat&Sun off'] = json.load(f)
-        
-    #with open('daytime_on_nighttime_halfpower_sat_sun_halfpower.json', 'r') as f:
-    #    run_schedules['Daytime on, Nighttime halfpower, Sat&Sun halfpower'] = json.load(f)
-        
-    #with open('always_on.json', 'r') as f:
-    #    run_schedules['Always on'] = json.load(f)
-        
-    #with open('always_on_sat_sun_off.json', 'r') as f:
-    #    run_schedules['Always on, Sat&Sun off'] = json.load(f)
-        
-    #with open('always_on_sat_sun_halfpower.json', 'r') as f:
-    #    run_schedules['Always on, Sat&Sun halfpower'] = json.load(f)
-        
-    #with open('run_schedules.json', 'w') as f:
-    #    json.dump(run_schedules, f)
-   
+ 
         
        
         
