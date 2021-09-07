@@ -127,7 +127,7 @@ def create_variations(summary_values):
             variations[mitigation]['value'] = [0] 
 
     airflows                 = [0.95, 0.9, 0.85, 0.8, 0.75, 0.7]
-    temperature_controlbands = [0.5, 1, 1.5, 2, 10]
+    temperature_controlbands = [0.5, 1, 1.5, 2]
     humidity_controlbands    = [0.05, 0.1, 0.15, 0.2]
     temperature_setpoints    = [-1, 1]
     
