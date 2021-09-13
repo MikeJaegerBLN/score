@@ -25,7 +25,7 @@ def read_model_inputs(model_file_path, model_inputs_sheet):
         # pdb.set_trace()
         i = 0
         
-        while i < 48:
+        while i < 49:
             # if i == 42:
             #     pdb.set_trace()
             type_param =str(model_inputs_df.loc[i, 'Type'])
