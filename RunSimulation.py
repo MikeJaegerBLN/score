@@ -2,6 +2,7 @@ import json
 import HVAC_CalcEngine_DictBased as HVAC
 from copy import deepcopy
 from openpyxl import load_workbook
+import pdb
 
 
 def generate_variation(value, inputs_dict, mitigation, results, variations):
@@ -210,33 +211,52 @@ def write_detailed_result(model_file_path, detailed_results_sheet, detailed_resu
     wb.save(model_file_path)
 
 def write_variations_result(model_file_path, variations_result_sheet, variation_result, basecase_result):
-    
+    pdb.set_trace()
     #read the file
     wb = load_workbook(model_file_path)
     wsh = wb[variations_result_sheet]
     
     #keys correponsding to columns in the variation results sheet
-    summary_keys = ['fans_total', 'preheat_total', 'dehum_total', 'hum_total', 'heating_total', 'cooling_total']
+    summary_keys = ['fans', 'preheat', 'dehum', 'hum', 'heating', 'cooling']
     
+    # counter to manage the loop through the case variations 'supply airflow', 
+    # 'temperature control bands', 'humidity control bands' and 
+    # 'temperature setpoints'
+    counter = [0,0,0,0]
     #Update the variations model inputs
     #for each key
-    for i in range(7, 50):
+    for iRow in range(7, 50):
         
         #if all the variations are populated, break
-        if wsh.cell(i, 2).value is None:
+        if wsh.cell(iRow, 2).value is None:
             break
-
-        key = wsh.cell(i, 2).value
+        
+        description = wsh.cell(iRow, 2).value
+        
+        # set the key and the counter index, since in every key the 0th value
+        # is the base scenario, the base scenario can also be in 'supply airflow'
+        if description[0:14] == 'Reduce Airflow' or description == 'Base Scenario':
+            key = 'supply airflow'
+            counterIndex = 0
+        elif description[0:49] == 'Increase upper and lower temperature control band':
+            key = 'temperature control bands'
+            counterIndex = 1
+        elif description[0:46] == 'Increase upper and lower Humidity control band':
+            key = 'humidity control bands'
+            counterIndex = 2
+        elif not description.find('temperature supply setpoint') == -1:
+            key = 'temperature setpoints'
+            counterIndex = 3
+        
+        # rise the counter of the key by one (starts with 0 (base scenario))
+        # but don't rise it for the base scenario since it is needed
+        if not description == 'Base Scenario':
+            counter[counterIndex] += 1
         
         #for each column
-        for j in range(5, 11):
-            
-            if key == 'Base Scenario':
-                #write base case results
-                wsh.cell(column = j, row = i, value = basecase_result[summary_keys[j-5]]) 
-            else:   
-                #write variations results
-                wsh.cell(column = j, row = i, value = variation_result[key][summary_keys[j-5]]) 
+        for iCol in range(5, 11):
+            # fill the value
+            wsh.cell(column = iCol, row = iRow, value = variation_result[key]['absolute'][summary_keys[iCol-5]][counter[counterIndex]]) 
 
     # Save the file
     wb.save(model_file_path)
@@ -253,11 +273,12 @@ if __name__ == "__main__":
     variation_summary_values = create_variations(summary_values)
    
     case = 'Template_wResults.xlsx'
-    model_file_path = r'C:\Users\Mike.Jaeger\Desktop\GitLabStuff\ahes-frontend\{}'.format(case)
+    # model_file_path = r'C:\Users\Mike.Jaeger\Desktop\GitLabStuff\ahes-frontend\{}'.format(case)
+    model_file_path = r'C:\Users\Henry.Sallandt\Desktop\Handy stuff\ahes\ahes-frontend\{}'.format(case)
     
     write_summary_values(model_file_path, 'Model Results Summary', summary_values)        
     write_detailed_result(model_file_path, 'Model Results Detailed', detailed_results)
-    #write_variations_result(model_file_path, 'Model Results Variations', variation_summary_values, summary_values)
+    write_variations_result(model_file_path, 'Model Results Variations', variation_summary_values, summary_values)
     
         
         
