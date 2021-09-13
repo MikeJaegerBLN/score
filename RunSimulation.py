@@ -258,11 +258,11 @@ if __name__ == "__main__":
         summary_values           = hvac_obj.get_summary_values()
         variation_summary_values = create_variations(summary_values, inputs_dicts[variant])
    
-        case = 'Template_wResults.xlsx'
-        model_file_path = r'C:\Users\Mike.Jaeger\Desktop\GitLabStuff\ahes-frontend\{}'.format(case)
+        #case = 'Template_wResults.xlsx'
+        #model_file_path = r'C:\Users\Mike.Jaeger\Desktop\GitLabStuff\ahes-frontend\{}'.format(case)
     
-        write_summary_values(model_file_path, 'Model Results Summary', summary_values)        
-        write_detailed_result(model_file_path, 'Model Results Detailed', detailed_results)
+        #write_summary_values(model_file_path, 'Model Results Summary', summary_values)        
+        #write_detailed_result(model_file_path, 'Model Results Detailed', detailed_results)
     #write_variations_result(model_file_path, 'Model Results Variations', variation_summary_values, summary_values)
     
         
