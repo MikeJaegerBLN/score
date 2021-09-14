@@ -2,11 +2,12 @@ import json
 import HVAC_CalcEngine_DictBased as HVAC
 from copy import copy, deepcopy
 from openpyxl import load_workbook
+from openpyxl.styles import Border, Side
 import os
 import datetime
 import pdb
 
-
+#%% old stuff
 # def generate_variation(value, inputs_dict, mitigation, results, variations):
     
 #     hvac_obj = HVAC.HVAC_Internal_Calculation(inputs_dict)
@@ -181,11 +182,11 @@ def create_variation(inputs_dict_base, measures_dict):
             if str(inputs_dict_var['model_inputs']['Set Point Profile '+str(iSetpoint)]['Room Temperature Upper Band']) == 'nan':
                 inputs_dict_var['model_inputs']['Set Point Profile '+str(iSetpoint)]['Room Temperature Upper Band'] = inputs_dict_var['model_inputs']['Set Point Profile 1']['Room Temperature Upper Band']
             
-            inputs_dict_var['model_inputs']['Set Point Profile '+str(iSetpoint)]['Room Humidity Lower Band'] += -1
-            inputs_dict_var['model_inputs']['Set Point Profile '+str(iSetpoint)]['Room Humidity Upper Band'] += 1
+            inputs_dict_var['model_inputs']['Set Point Profile '+str(iSetpoint)]['Room Temperature Lower Band'] += -1
+            inputs_dict_var['model_inputs']['Set Point Profile '+str(iSetpoint)]['Room Temperature Upper Band'] += 1
     
-    #%% change setpoint
-    if measures_dict['change_temp_setpoint']:
+    #%% reduce setpoint
+    if measures_dict['reduce_temp_setpoint']:
         for iSetpoint in range(1,4):
             #if no setpoint is given for no.2 and 3
             if str(inputs_dict_var['model_inputs']['Set Point Profile '+str(iSetpoint)]['Room Temperature Lower Band']) == 'nan':
@@ -195,9 +196,24 @@ def create_variation(inputs_dict_base, measures_dict):
             if str(inputs_dict_var['model_inputs']['Set Point Profile '+str(iSetpoint)]['Room Temperature Setpoint']) == 'nan':
                 inputs_dict_var['model_inputs']['Set Point Profile '+str(iSetpoint)]['Room Temperature Setpoint'] = inputs_dict_var['model_inputs']['Set Point Profile 1']['Room Temperature Setpoint']
                 
-            inputs_dict_var['model_inputs']['Set Point Profile '+str(iSetpoint)]['Room Temperature Lower Band'] += measures_dict['change_temp_setpoint']
-            inputs_dict_var['model_inputs']['Set Point Profile '+str(iSetpoint)]['Room Temperature Upper Band'] += measures_dict['change_temp_setpoint']
-            inputs_dict_var['model_inputs']['Set Point Profile '+str(iSetpoint)]['Room Temperature Setpoint']   += measures_dict['change_temp_setpoint']
+            inputs_dict_var['model_inputs']['Set Point Profile '+str(iSetpoint)]['Room Temperature Lower Band'] -= 1
+            inputs_dict_var['model_inputs']['Set Point Profile '+str(iSetpoint)]['Room Temperature Upper Band'] -= 1
+            inputs_dict_var['model_inputs']['Set Point Profile '+str(iSetpoint)]['Room Temperature Setpoint']   -= 1
+    
+    #%% increase setpoint
+    if measures_dict['increase_temp_setpoint']:
+        for iSetpoint in range(1,4):
+            #if no setpoint is given for no.2 and 3
+            if str(inputs_dict_var['model_inputs']['Set Point Profile '+str(iSetpoint)]['Room Temperature Lower Band']) == 'nan':
+                inputs_dict_var['model_inputs']['Set Point Profile '+str(iSetpoint)]['Room Temperature Lower Band'] = inputs_dict_var['model_inputs']['Set Point Profile 1']['Room Temperature Lower Band']
+            if str(inputs_dict_var['model_inputs']['Set Point Profile '+str(iSetpoint)]['Room Temperature Upper Band']) == 'nan':
+                inputs_dict_var['model_inputs']['Set Point Profile '+str(iSetpoint)]['Room Temperature Upper Band'] = inputs_dict_var['model_inputs']['Set Point Profile 1']['Room Temperature Upper Band']
+            if str(inputs_dict_var['model_inputs']['Set Point Profile '+str(iSetpoint)]['Room Temperature Setpoint']) == 'nan':
+                inputs_dict_var['model_inputs']['Set Point Profile '+str(iSetpoint)]['Room Temperature Setpoint'] = inputs_dict_var['model_inputs']['Set Point Profile 1']['Room Temperature Setpoint']
+                
+            inputs_dict_var['model_inputs']['Set Point Profile '+str(iSetpoint)]['Room Temperature Lower Band'] += 1
+            inputs_dict_var['model_inputs']['Set Point Profile '+str(iSetpoint)]['Room Temperature Upper Band'] += 1
+            inputs_dict_var['model_inputs']['Set Point Profile '+str(iSetpoint)]['Room Temperature Setpoint']   += 1
             
     #%% widen humidity band
     if measures_dict['widen_humidity_band']:
@@ -214,18 +230,26 @@ def create_variation(inputs_dict_base, measures_dict):
     #%% reduce air flow
     if measures_dict['reduce_air_flow']:
         inputs_dict_var['model_inputs']['General']['Supply Airflow'] = inputs_dict_var['model_inputs']['General']['Supply Airflow']*0.7
+        inputs_dict_var['model_inputs']['General']['Return Airflow'] = inputs_dict_var['model_inputs']['General']['Return Airflow']*0.7
     
     #%% incorporate run around coild heat recovery
     if measures_dict['incorporate_run_around_coil_heat_recovery']:
-        for iHVAC in range(1,11):
-            if inputs_dict_var['model_inputs']['General']['HVAC Module ' + str(iHVAC)] == 0:
-                inputs_dict_var['model_inputs']['General']['HVAC Module ' + str(iHVAC)] = 'Heating Coil'
+        if inputs_dict_var['model_inputs']['General']['HVAC Module 1'] == 'Mixing Box' or inputs_dict_var['model_inputs']['General']['HVAC Module 1'] == 'Thermal Wheel' or inputs_dict_var['model_inputs']['General']['HVAC Module 1'] == 'Plate Heat Exchanger':
+            inputs_dict_var['model_inputs']['General']['HVAC Module 1'] == 'Run Around Coil'
+        else:
+            for iHVAC in range(2,10):
+                inputs_dict_var['model_inputs']['General']['HVAC Module ' + str(iHVAC)] = inputs_dict_var['model_inputs']['General']['HVAC Module ' + str(iHVAC-1)]
+            inputs_dict_var['model_inputs']['General']['HVAC Module 1'] = 'Run Around Coil'
     
-    #%% incorporate run around coild heat recovery
+    #%% incorporate mixing box heat recovery
     if measures_dict['incorporate_mixing_box_recovery']:
-        for iHVAC in range(1,11):
-            if inputs_dict_var['model_inputs']['General']['HVAC Module ' + str(iHVAC)] == 0:
-                inputs_dict_var['model_inputs']['General']['HVAC Module ' + str(iHVAC)] = 'Mixing Box'
+        if inputs_dict_var['model_inputs']['General']['HVAC Module 1'] == 'Run Around Coil' or inputs_dict_var['model_inputs']['General']['HVAC Module 1'] == 'Thermal Wheel' or inputs_dict_var['model_inputs']['General']['HVAC Module 1'] == 'Plate Heat Exchanger':
+            inputs_dict_var['model_inputs']['General']['HVAC Module 1'] == 'Mixing Box'
+        else:
+            for iHVAC in range(2,10):
+                inputs_dict_var['model_inputs']['General']['HVAC Module ' + str(iHVAC)] = inputs_dict_var['model_inputs']['General']['HVAC Module ' + str(iHVAC-1)]
+            inputs_dict_var['model_inputs']['General']['HVAC Module 1'] = 'Mixing Box'
+    
     return inputs_dict_var
   
   
@@ -238,12 +262,15 @@ def read_measure_combination(measure_combination):
     else:
         measures['widen_temp_band'] = False
         
-    if not measure_combination.find('A2') == -1 and not measure_combination.find('A3') == -1:
-        measures['change_temp_setpoint'] = False
-    elif measure_combination.find('A2'):
-        measures['change_temp_setpoint'] = -1
-    elif measure_combination.find('A3'):
-        measures['change_temp_setpoint'] =  1
+    if not measure_combination.find('A2') == -1:
+        measures['reduce_temp_setpoint'] = True
+    else:
+        measures['reduce_temp_setpoint'] = False
+        
+    if not measure_combination.find('A3') == -1:
+        measures['increase_temp_setpoint'] = True
+    else:
+        measures['increase_temp_setpoint'] = False
     
     if not measure_combination.find('B1') == -1:
         measures['widen_humidity_band'] = True
@@ -297,16 +324,15 @@ def create_variations_batch(summary_values, inputs_dict_var_base):
                    summary_values['total']['heating_total']+summary_values['total']['cooling_total']+
                    summary_values['total']['dehum_total']+summary_values['total']['hum_total'])
     
-    # check if Heating Coil or Mixing Box exists and if so all possible measures with D1 or D2 are skipped
+    # check if Run Around Coil or Mixing Box exists and if so all possible measures with D1 or D2 are skipped
     D1 = True
     D2 = True
-    for iHVAC in range(1,11):
-        if inputs_dict_var_base['model_inputs']['General']['HVAC Module ' + str(iHVAC)] == 'Heating Coil':
-            D1 = False
-        if inputs_dict_var_base['model_inputs']['General']['HVAC Module ' + str(iHVAC)] == 'Mixing Box':
-            D2 = False
+    if inputs_dict_var_base['model_inputs']['General']['HVAC Module 1'] == 'Run Around Coil':
+        D1 = False
+    if inputs_dict_var_base['model_inputs']['General']['HVAC Module 1'] == 'Mixing Box':
+        D2 = False
     
-    # initialise variations
+    # initialise variation results dictionary
     variations = {}
     variations['absolute'] = {'fans':    [summary_values['total']['fans_total']],
                               'preheat': [summary_values['total']['preheat_total']],
@@ -326,6 +352,14 @@ def create_variations_batch(summary_values, inputs_dict_var_base):
                                 }
     variations['measure'] = ['-']
     variations['input_dicts_var'] = [inputs_dict_var_base]
+    variations['measure_bool'] = [{'widen_temp_band'                            : False,
+                                  'reduce_temp_setpoint'                        : False,
+                                  'increase_temp_setpoint'                      : False,
+                                  'widen_humidity_band'                         : False,
+                                  'reduce_air_flow'                             : False,
+                                  'incorporate_run_around_coil_heat_recovery'   : False,
+                                  'incorporate_mixing_box_recovery'             : False,
+                                  'string'                                      : '-'}]
     # if mitigation==mitigations[0]:
     #     variations[mitigation]['value'] = [1] 
     # if mitigation==mitigations[1] or mitigation==mitigations[2] or mitigation==mitigations[3]:
@@ -337,9 +371,11 @@ def create_variations_batch(summary_values, inputs_dict_var_base):
         if not (D1 == False and not measure.find('D1') == -1) and not (D2 == False and not measure.find('D2') == -1):
             print(measure)
             measures_dict = read_measure_combination(measure)
+            variations['measure_bool'].append(measures_dict)
             inputs_dict_var_measure = create_variation(inputs_dict_var_base, measures_dict)
             variations['input_dicts_var'].append(inputs_dict_var_measure)
             variations = generate_variation(inputs_dict_var_measure, measure, result_names, variations)
+            
             # pdb.set_trace()
         else:
             print(measure + ' skipped!')
@@ -582,7 +618,8 @@ def write_summary_batch(inputs_dicts, summary_values_cases, model_file_path):
         iCol += 1
         
         # Reheat (kWh)
-        wsh.cell( column = iCol, row = iAHU+2, value = 0 )
+        reheat = 0
+        wsh.cell( column = iCol, row = iAHU+2, value = reheat )
         iCol += 1
         
         # Dehum (kWh)
@@ -602,7 +639,8 @@ def write_summary_batch(inputs_dicts, summary_values_cases, model_file_path):
         iCol += 1
         
         # Σ Energy (kWh)
-        wsh.cell( column = iCol, row = iAHU+2, value = '=SUM(BaseData[@[Fan Power (kWh)]:[Cool (kWh)]])' )
+        total = summary_values_cases[str(iAHU)]['total']['fans_total'] + summary_values_cases[str(iAHU)]['total']['preheat_total'] + summary_values_cases[str(iAHU)]['total']['dehum_total'] + summary_values_cases[str(iAHU)]['total']['hum_total'] + summary_values_cases[str(iAHU)]['total']['heating_total'] + summary_values_cases[str(iAHU)]['total']['cooling_total'] + reheat
+        wsh.cell( column = iCol, row = iAHU+2, value = total )
         iCol += 1
         
         # Volume (m³)
@@ -615,7 +653,97 @@ def write_summary_batch(inputs_dicts, summary_values_cases, model_file_path):
         
     wb.save(model_file_path)
     
-
+def write_variations_batch_bayer(inputs_dicts, variation_summary_values_cases, model_file_path):
+    # pdb.set_trace()
+    wb = load_workbook(model_file_path)
+    wsh = wb['ECM matrix']
+    
+    n_AHUs = len(inputs_dicts)
+    
+    print('clearing old data...')
+    # delete old data
+    for iRow in range(3,10000):
+        for iCol in range(1,56):
+            wsh.cell(column = iCol, row = iRow, value = '')
+            wsh.cell(column = iCol, row = iRow).border = Border()
+    print('finished!')
+    iRow = 2
+    # write values of variations
+    for iAHU in range(n_AHUs):
+        nMeasures = len(variation_summary_values_cases[str(iAHU)]['measure']) - 1
+        for iMeasure in range(1,nMeasures+1):
+            
+            # copy existing formulas
+            for iCol in range(1,56):
+                if not iRow == 2:
+                    wsh.cell(column = iCol, row = iRow, value = wsh.cell(column = iCol, row = iRow-1).value)
+            iCol = 1
+            # pdb.set_trace()
+            # Site
+            wsh.cell( column = iCol, row = iRow, value = inputs_dicts[str(iAHU)]['model_inputs']['General']['Site Location'] )
+            iCol += 1
+            
+            # AHU Ref
+            wsh.cell( column = iCol, row = iRow, value = inputs_dicts[str(iAHU)]['model_inputs']['General']['AHU'] )
+            iCol += 1
+            
+            # Run Date
+            wsh.cell( column = iCol, row = iRow, value = str(datetime.datetime.now().strftime('%y-%m-%d %H-%M')) )
+            iCol += 1
+            
+            # Room Cleanliness Class
+            wsh.cell( column = iCol, row = iRow, value = inputs_dicts[str(iAHU)]['model_inputs']['General']['Room Cleanliness Class'] )
+            iCol += 1
+            
+            # Area
+            wsh.cell( column = iCol, row = iRow, value = inputs_dicts[str(iAHU)]['model_inputs']['General']['Room Area'] )
+            iCol += 1
+            
+            # Current AHU Configuration
+            systemType = ''
+            for iHVAC in range(1,11):
+                if inputs_dicts[str(iAHU)]['model_inputs']['General']['HVAC Module ' + str(iHVAC)] == 0:
+                    systemType = systemType[0:-2]
+                    break
+                systemType += inputs_dicts[str(iAHU)]['model_inputs']['General']['HVAC Module ' + str(iHVAC)] + '_'
+            wsh.cell( column = iCol, row = iRow, value = systemType )
+            iCol += 1
+            
+            # Measure
+            wsh.cell( column = iCol, row = iRow, value = variation_summary_values_cases[str(iAHU)]['measure'][iMeasure] )
+            iCol += 1
+            
+            # zeros and ones
+            excelMeasures = ['widen_temp_band','widen_humidity_band','reduce_air_flow','incorporate_run_around_coil_heat_recovery','incorporate_mixing_box_recovery','reduce_temp_setpoint','increase_temp_setpoint']
+            for iExcelMeasure in excelMeasures:
+                wsh.cell( column = iCol, row = iRow, value = int(variation_summary_values_cases[str(iAHU)]['measure_bool'][iMeasure][iExcelMeasure]) )
+                iCol += 1
+            
+            # base scenario and measure scenario
+            resultKeys = ['fans', 'preheat', 'dummy', 'dehum', 'hum', 'heating', 'cooling', 'total']
+            for iCase in range(2):
+                if iCase == 0:
+                    iDictValue = 0
+                else:
+                    iDictValue = iMeasure
+                for key in resultKeys:
+                    if not key == 'dummy':
+                        wsh.cell( column = iCol, row = iRow, value = variation_summary_values_cases[str(iAHU)]['absolute'][key][iDictValue] )
+                    else:
+                        wsh.cell( column = iCol, row = iRow, value = 0 )
+                    iCol += 1
+                
+                if iCase == 0:
+                    iCol += 3
+            # pdb.set_trace()
+            if iMeasure == nMeasures:
+                double = Side(border_style="double")
+                for iCell in range(1,56):
+                    wsh.cell(row = iRow, column = iCell).border = Border(bottom = double)
+                    # True
+            iRow += 1
+    wb.save(model_file_path)
+          
 if __name__ == "__main__":  
     
     inputs_path = 'inputs.json'    
@@ -637,12 +765,13 @@ if __name__ == "__main__":
         summary_values_cases[variant]           = hvac_obj_cases[variant].get_summary_values()
         # variation_summary_values_cases[variant] = create_variations(summary_values_cases[variant], inputs_dicts[variant])
         variation_summary_values_cases[variant] = create_variations_batch(summary_values_cases[variant], inputs_dicts[variant])
-        pdb.set_trace()
+        # pdb.set_trace()
    
     case = 'Master Data.xlsx'
     model_file_path = os.getcwd() + '\\' + case
     
-    # write_summary_batch(inputs_dicts, summary_values_cases, model_file_path)
+    write_summary_batch(inputs_dicts, summary_values_cases, model_file_path)
+    write_variations_batch_bayer(inputs_dicts, variation_summary_values_cases, model_file_path)
 
     #write_summary_values(model_file_path, 'Model Results Summary', summary_values)        
     #write_detailed_result(model_file_path, 'Model Results Detailed', detailed_results)
