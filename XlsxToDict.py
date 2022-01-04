@@ -117,14 +117,14 @@ def read_thermal_profile(models_inputs_dicts, run_schedules_dicts, flag):
     if flag == 'sensible':
         dict_key = 'Sensible gains (Heat)'
     elif flag == 'latent':
-        dict_key = 'Latent gains (Heat)'
+        dict_key = 'Latent gains (Steam)'
     else:
         print('Wrong flag!')
         pdb.set_trace()
     n_AHUs = len(run_schedules_dicts.keys())
     thermal_profile_dicts = {}
     for iAHU in range(n_AHUs):
-        gains_specific = float(models_inputs_dicts[iAHU]['Sensible gains (Heat)'].split(' ')[2][1:]) #W/m²
+        gains_specific = float(models_inputs_dicts[iAHU][dict_key].split(' ')[2][1:]) #W/m²
         area = float(models_inputs_dicts[iAHU]['Room Area']) # m²
         gains = gains_specific * area / 1000 #kW
         
