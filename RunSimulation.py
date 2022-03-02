@@ -211,8 +211,7 @@ def write_detailed_result(model_file_path, detailed_results_sheet, detailed_resu
     wb.save(model_file_path)
 
 def write_variations_result(model_file_path, variations_result_sheet, variation_result, basecase_result):
-    pdb.set_trace()
-    #read the file
+   
     wb = load_workbook(model_file_path)
     wsh = wb[variations_result_sheet]
     
@@ -272,9 +271,9 @@ if __name__ == "__main__":
     summary_values           = hvac_obj.get_summary_values()
     variation_summary_values = create_variations(summary_values)
    
-    case = 'Template_wResults.xlsx'
-    # model_file_path = r'C:\Users\Mike.Jaeger\Desktop\GitLabStuff\ahes-frontend\{}'.format(case)
-    model_file_path = r'C:\Users\Henry.Sallandt\Desktop\Handy stuff\ahes\ahes-frontend\{}'.format(case)
+    case = 'Bayer_Bergkamen_9.xlsx'
+    model_file_path = r'C:\Users\Mike.Jaeger\Desktop\GitLabStuff\ahes-frontend\{}'.format(case)
+    #model_file_path = r'C:\Users\Henry.Sallandt\Desktop\Handy stuff\ahes\ahes-frontend\{}'.format(case)
     
     write_summary_values(model_file_path, 'Model Results Summary', summary_values)        
     write_detailed_result(model_file_path, 'Model Results Detailed', detailed_results)
