@@ -249,6 +249,29 @@ def create_variation(inputs_dict_base, measures_dict):
             for iHVAC in range(2,10):
                 inputs_dict_var['model_inputs']['General']['HVAC Module ' + str(iHVAC)] = inputs_dict_var['model_inputs']['General']['HVAC Module ' + str(iHVAC-1)]
             inputs_dict_var['model_inputs']['General']['HVAC Module 1'] = 'Mixing Box'
+            
+    #%% incorporate different time-schedule
+    if measures_dict['tweak_schedule_1']:
+        time_1     = 22
+        time_2     = 5
+        percentage = 0.8
+        
+        diff       = 24-time_1 + time_2
+        hours      = []
+        for j in range(365):
+            hours.append(time_1+(j*24))
+            for k in range(diff):
+                hours.append(hours[-1]+1)
+        new_schedule = deepcopy(inputs_dict_var['run_schedule']['Run_Schedule_Profile'])
+        for i in range(24):
+            if i+1<=time_2:
+                new_schedule[i] = percentage
+        for hour in hours:
+            try:
+                new_schedule[hour-1] = percentage 
+            except:
+                pass
+        inputs_dict_var['run_schedule']['Run_Schedule_Profile'] = new_schedule
     
     return inputs_dict_var
   
@@ -291,6 +314,11 @@ def read_measure_combination(measure_combination):
         measures['incorporate_mixing_box_recovery'] = True
     else:
         measures['incorporate_mixing_box_recovery'] = False
+        
+    if not measure_combination.find('E1') == -1:
+        measures['tweak_schedule_1'] = True
+    else:
+        measures['tweak_schedule_1'] = False
     
     return measures
 
@@ -318,7 +346,9 @@ def create_variations_batch(summary_values, inputs_dict_var_base):
                             'A1B1C1D1',
                             'B1C1D1',
                             'A1B1D1',
-                            'D1']
+                            'D1',
+                            'E1']
+                            
     result_names     = ['fans', 'preheat', 'heating', 'cooling', 'dehum', 'hum']
     total       = (summary_values['total']['fans_total']+summary_values['total']['preheat_total']+
                    summary_values['total']['heating_total']+summary_values['total']['cooling_total']+
@@ -359,6 +389,7 @@ def create_variations_batch(summary_values, inputs_dict_var_base):
                                   'reduce_air_flow'                             : False,
                                   'incorporate_run_around_coil_heat_recovery'   : False,
                                   'incorporate_mixing_box_recovery'             : False,
+                                  'tweak_schedule_1'                            : False,
                                   'string'                                      : '-'}]
     # if mitigation==mitigations[0]:
     #     variations[mitigation]['value'] = [1] 
@@ -763,10 +794,12 @@ if __name__ == "__main__":
         hvac_obj_cases[variant]                 = HVAC.HVAC_Internal_Calculation(inputs_dicts[variant])
         detailed_results_cases[variant]         = hvac_obj_cases[variant].get_detailed_results()
         summary_values_cases[variant]           = hvac_obj_cases[variant].get_summary_values()
+        print (variant)
         # variation_summary_values_cases[variant] = create_variations(summary_values_cases[variant], inputs_dicts[variant])
         variation_summary_values_cases[variant] = create_variations_batch(summary_values_cases[variant], inputs_dicts[variant])
         # pdb.set_trace()
-   
+        
+    
     case = 'Master Data.xlsx'
     model_file_path = os.getcwd() + '\\' + case
     

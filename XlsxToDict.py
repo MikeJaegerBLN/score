@@ -28,6 +28,7 @@ def read_model_inputs(model_file_path, model_inputs_sheet):
         while i < 49:
             # if i == 42:
             #     pdb.set_trace()
+           
             type_param =str(model_inputs_df.loc[i, 'Type'])
             model_input_param = model_inputs_df.loc[i, 'Parameter']
             value = model_inputs_df.loc[i, 'Value']
@@ -124,7 +125,8 @@ def read_thermal_profile(models_inputs_dicts, run_schedules_dicts, flag):
     n_AHUs = len(run_schedules_dicts.keys())
     thermal_profile_dicts = {}
     for iAHU in range(n_AHUs):
-        gains_specific = float(models_inputs_dicts[iAHU][dict_key].split(' ')[2][1:]) #W/m²
+        #gains_specific = float(models_inputs_dicts[iAHU]['Sensible gains (Heat)'].split(' ')[2][1:]) #W/m²
+        gains_specific = float(models_inputs_dicts[iAHU][dict_key].split('(')[1].split(' ')[0]) #W/m²
         area = float(models_inputs_dicts[iAHU]['Room Area']) # m²
         gains = gains_specific * area / 1000 #kW
         
@@ -229,8 +231,9 @@ if __name__ == "__main__":
     with open('run_schedules.json', 'r') as f:
         schedules = json.load(f)
     
-    model_file_path = r'Template_Batch.xlsx'
-    
+    model_file_path = r'2022-02-02_Bergkamen.xlsx'
+    hour = []
+
     model_inputs_sheet = 'Model Inputs'
     weather_data_sheet = 'Weather Data'
     run_schedule_sheet = 'Run Schedule Profile'
@@ -245,13 +248,14 @@ if __name__ == "__main__":
     for variant in inputs_dicts:
         inputs_dicts[variant] = tweak_inputs_dict(inputs_dicts[variant])   
     
-    for key in inputs_dicts:
-        print (key)
+    #for key in inputs_dicts:
+    #    print (key)
         
     with open('inputs.json', 'w') as f:
         json.dump(inputs_dicts, f)
     
     
+    #print (inputs_dicts[0]['weather_data'])
  
         
        
