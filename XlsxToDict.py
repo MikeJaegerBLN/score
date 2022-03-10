@@ -231,7 +231,7 @@ if __name__ == "__main__":
     with open('run_schedules.json', 'r') as f:
         schedules = json.load(f)
     
-    model_file_path = r'2022-02-02_Bergkamen.xlsx'
+    model_file_path = r'2022-03-02_Bergkamen.xlsx'
     hour = []
 
     model_inputs_sheet = 'Model Inputs'
@@ -255,7 +255,7 @@ if __name__ == "__main__":
         json.dump(inputs_dicts, f)
     
     
-    #print (inputs_dicts[0]['weather_data'])
+    print (inputs_dicts[0].keys())
  
         
        

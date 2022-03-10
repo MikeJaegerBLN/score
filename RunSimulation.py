@@ -272,6 +272,52 @@ def create_variation(inputs_dict_base, measures_dict):
             except:
                 pass
         inputs_dict_var['run_schedule']['Run_Schedule_Profile'] = new_schedule
+        
+    #%% incorporate different time-schedule
+    if measures_dict['tweak_schedule_2']:
+        time_1     = 22
+        time_2     = 5
+        percentage = 0.6
+        
+        diff       = 24-time_1 + time_2
+        hours      = []
+        for j in range(365):
+            hours.append(time_1+(j*24))
+            for k in range(diff):
+                hours.append(hours[-1]+1)
+        new_schedule = deepcopy(inputs_dict_var['run_schedule']['Run_Schedule_Profile'])
+        for i in range(24):
+            if i+1<=time_2:
+                new_schedule[i] = percentage
+        for hour in hours:
+            try:
+                new_schedule[hour-1] = percentage 
+            except:
+                pass
+        inputs_dict_var['run_schedule']['Run_Schedule_Profile'] = new_schedule
+        
+    #%% incorporate different time-schedule
+    if measures_dict['tweak_schedule_3']:
+        time_1     = 22
+        time_2     = 5
+        percentage = 0.4
+        
+        diff       = 24-time_1 + time_2
+        hours      = []
+        for j in range(365):
+            hours.append(time_1+(j*24))
+            for k in range(diff):
+                hours.append(hours[-1]+1)
+        new_schedule = deepcopy(inputs_dict_var['run_schedule']['Run_Schedule_Profile'])
+        for i in range(24):
+            if i+1<=time_2:
+                new_schedule[i] = percentage
+        for hour in hours:
+            try:
+                new_schedule[hour-1] = percentage 
+            except:
+                pass
+        inputs_dict_var['run_schedule']['Run_Schedule_Profile'] = new_schedule
     
     return inputs_dict_var
   
@@ -319,6 +365,16 @@ def read_measure_combination(measure_combination):
         measures['tweak_schedule_1'] = True
     else:
         measures['tweak_schedule_1'] = False
+        
+    if not measure_combination.find('E2') == -1:
+        measures['tweak_schedule_2'] = True
+    else:
+        measures['tweak_schedule_2'] = False
+        
+    if not measure_combination.find('E3') == -1:
+        measures['tweak_schedule_3'] = True
+    else:
+        measures['tweak_schedule_3'] = False
     
     return measures
 
@@ -347,7 +403,9 @@ def create_variations_batch(summary_values, inputs_dict_var_base):
                             'B1C1D1',
                             'A1B1D1',
                             'D1',
-                            'E1']
+                            'E1',
+                            'E2',
+                            'E3']
                             
     result_names     = ['fans', 'preheat', 'heating', 'cooling', 'dehum', 'hum']
     total       = (summary_values['total']['fans_total']+summary_values['total']['preheat_total']+
@@ -390,6 +448,8 @@ def create_variations_batch(summary_values, inputs_dict_var_base):
                                   'incorporate_run_around_coil_heat_recovery'   : False,
                                   'incorporate_mixing_box_recovery'             : False,
                                   'tweak_schedule_1'                            : False,
+                                  'tweak_schedule_2'                            : False,
+                                  'tweak_schedule_3'                            : False,
                                   'string'                                      : '-'}]
     # if mitigation==mitigations[0]:
     #     variations[mitigation]['value'] = [1] 

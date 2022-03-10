@@ -519,8 +519,11 @@ class HVAC_Internal_Calculation(object):
             if ((min_possible_air_tdb<self.supply_tdb and min_possible_air_tdb>self.current_HVAC_tdb) or
                 (min_possible_air_tdb>self.supply_tdb and min_possible_air_tdb<self.current_HVAC_tdb)):
                 
-                ratio                     = ((self.supply_tdb - self.current_HVAC_tdb) / 
-                                             (self.ambient_temperature[hour] - self.current_HVAC_tdb))
+                try:
+                    ratio                     = ((self.supply_tdb - self.current_HVAC_tdb) / 
+                                                 (self.ambient_temperature[hour] - self.current_HVAC_tdb))
+                except:
+                    ratio                     = 1
                 
                 #fresh air percentage cant be ihigher than 1
                 self.fresh_air_percentage = ratio if ratio<=1 else 1
