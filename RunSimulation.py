@@ -271,7 +271,7 @@ if __name__ == "__main__":
     summary_values           = hvac_obj.get_summary_values()
     variation_summary_values = create_variations(summary_values)
    
-    case = 'Bayer_Bergkamen_15_A2.xlsx'
+    case = 'Bayer_Bergkamen_0AWB.xlsx'
     model_file_path = r'C:\Users\Mike.Jaeger\Documents\GitHub\score\{}'.format(case)
     #model_file_path = r'C:\Users\Henry.Sallandt\Desktop\Handy stuff\ahes\ahes-frontend\{}'.format(case)
     
